@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const bookRoutes = require('./routes/bookRoutes');
+const Book = require('./models/Book');
 
 // Load environment variables
 dotenv.config();
@@ -16,16 +17,22 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Routes
-app.use('/api/books', bookRoutes);
+// --- ROUTES ---
 
-// Basic Route for Testing
-app.get('/', (req, res) => {
-    res.send('API is running...');
+// Display live JSON data on the home page for quick verification
+app.get('/', async (req, res, next) => {
+    try {
+        const books = await Book.find();
+        res.json(books);
+    } catch (error) {
+        next(error);
+    }
 });
 
-// --- FINAL ADDITION: Error Handling Middleware ---
-// This catches all errors from your asyncHandler
+// Main API Routes
+app.use('/api/books', bookRoutes);
+
+// --- ERROR HANDLING ---
 app.use((err, req, res, next) => {
     const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
     res.status(statusCode).json({
